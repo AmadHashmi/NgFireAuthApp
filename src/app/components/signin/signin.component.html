@@ -1,21 +1,21 @@
-<div class="displayTable">
+<div class="displayTable container">
   <div class="displayTableCell">
     <div class="authBlock">
       <h3>Sign In</h3>
-      <div class="formGroup">
+      <div class="form-group">
         <input
           type="text"
-          class="formControl"
+          class="form-control"
           placeholder="Username"
           #userName
           required
         />
       </div>
 
-      <div class="formGroup">
+      <div class="form-group">
         <input
           type="password"
-          class="formControl"
+          class="form-control"
           placeholder="Password"
           #userPassword
           required
@@ -23,45 +23,34 @@
       </div>
 
       <!-- Calling SignIn Api from AuthService -->
-      <div class="formGroup">
+      <div class="form-group">
         <input
           type="button"
-          class="btn btnPrimary"
+          class="btn btn-success"
           value="Log in"
           (click)="authService.SignIn(userName.value, userPassword.value)"
         />
       </div>
 
-      <div class="formGroup">
+      <div class="form-group">
         <span class="or"><span class="orInner">Or</span></span>
       </div>
 
-      <!-- Calling GoogleAuth Api from AuthService -->
-      <!-- <div class="formGroup">
+      <div class="form-group">
         <button
+          class="btn btn-outline-info"
           type="button"
-          class="btn googleBtn"
-          (click)="authService.GoogleAuth()"
+          (click)="authService.FacebookAuth()"
         >
-          <i class="fab fa-google-plus-g"></i>
-          Log in with Google
-        </button>
-      </div> -->
-      <div class="formGroup">
-        <button type="button" (click)="authService.FacebookAuth()">
           Log in with Facebook
         </button>
-      </div>
-
-      <div class="forgotPassword">
-        <span routerLink="/forgot-password">Forgot Password?</span>
       </div>
     </div>
 
     <div class="redirectToLogin">
       <span
         >Don't have an account?<span
-          class="redirect"
+          class="redirect btn btn-primary"
           routerLink="/register-user"
         >
           Sign Up</span

@@ -1,70 +1,48 @@
-<div class="displayTable">
+<div class="displayTable container">
   <div class="displayTableCell">
     <div class="authBlock">
       <h3>Sign Up</h3>
 
-      <div class="formGroup">
+      <div class="form-group">
         <input
           type="email"
-          class="formControl"
+          class="form-control"
           placeholder="Email Address"
           #userEmail
           required
         />
       </div>
 
-      <div class="formGroup">
+      <div class="form-group">
         <input
           type="password"
-          class="formControl"
+          class="form-control"
           placeholder="Password"
           #userPwd
           required
         />
       </div>
 
-      <div class="formGroup">
+      <div class="form-group">
         <input
           type="button"
-          class="btn btnPrimary"
+          class="btn btn-primary"
           value="Sign Up"
           (click)="authService.SignUp(userEmail.value, userPwd.value)"
         />
       </div>
 
-      <div class="formGroup">
+      <div class="form-group">
         <span class="or"><span class="orInner">Or</span></span>
       </div>
-
-      <!-- Continue with Google -->
-      <!-- <div class="formGroup">
-        <button
-          type="button"
-          class="btn googleBtn"
-          (click)="authService.GoogleAuth()"
-        >
-          <i class="fab fa-google-plus-g"></i>
-          Continue with Google
-        </button>
-      </div> -->
-
-      <!-- Continue with Facebook -->
-      <!-- <div class="formGroup">
-        <button
-          type="button"
-          class="btn facebookBtn"
-          (click)="authService.FacebookAuth()"
-        >
-          <i class="fab fa-facebook"></i>
-          Continue with Facebook
-        </button>
-      </div> -->
     </div>
 
     <div class="redirectToLogin">
       <span
         >Already have an account?
-        <span class="redirect" routerLink="/sign-in">Log In</span></span
+        <span class="redirect btn btn btn-success" routerLink="/sign-in"
+          >Log In</span
+        ></span
       >
     </div>
   </div>

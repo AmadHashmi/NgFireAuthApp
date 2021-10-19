@@ -1,4 +1,4 @@
-import { Injectable, NgZone } from '@angular/core';
+import { ElementRef, Injectable, NgZone, ViewChild } from '@angular/core';
 import { User } from './user';
 import firebase from 'firebase/compat/app';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
@@ -24,6 +24,7 @@ import { finalize } from 'rxjs/operators';
   providedIn: 'root',
 })
 export class AuthService {
+  @ViewChild('fileInput', { static: false }) fileInput!: ElementRef;
   userData: any;
   newUserData: any;
   constructor(
@@ -183,6 +184,10 @@ export class AuthService {
 
   getUserDoc(id: any) {
     return this.afs.collection('user').doc(id).valueChanges();
+  }
+
+  openImageUpload() {
+    console.log('clicked!');
   }
 }
 

@@ -37,25 +37,26 @@
                 src="{{
                   user.photoURL
                     ? user.photoURL
-                    : 'https://www.w3schools.com/bootstrap4/newyork.jpg'
+                    : 'https://nd.net/wp-content/uploads/2016/04/profile-dummy-300x300.png'
                 }}"
                 alt="{{ user.displayName }}"
+                (click)="file.click()"
               />
 
               <input
+                #file
                 type="file"
-                class="form-control"
                 (change)="authService.changeProfileImage($event, user.uid)"
                 value="Change Image"
+                class="form-control-file"
+                style="display: none"
               />
 
               <div class="media-body">
-                <h1>
+                <p style="font-size: 30px">
                   Hello:
-                  <strong>{{
-                    user.displayName ? user.displayName : "User"
-                  }}</strong>
-                </h1>
+                  {{ user.displayName ? user.displayName : "User" }}
+                </p>
                 <p>
                   User ID: <strong>{{ user.uid }}</strong>
                 </p>
