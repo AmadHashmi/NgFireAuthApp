@@ -1,8 +1,17 @@
-<div class="displayTable container">
+<div class="displayTable">
   <div class="displayTableCell">
+    <div class="px-logo">
+      <a href="#">
+        <img
+          src="../../../assets/comparistan_white.svg"
+          alt=""
+          style="max-height: 40px"
+        />
+      </a>
+    </div>
     <div class="authBlock">
       <h3>Sign In</h3>
-      <div class="form-group">
+      <div class="formGroup form-group">
         <input
           type="text"
           class="form-control"
@@ -12,7 +21,7 @@
         />
       </div>
 
-      <div class="form-group">
+      <div class="formGroup form-group">
         <input
           type="password"
           class="form-control"
@@ -23,34 +32,48 @@
       </div>
 
       <!-- Calling SignIn Api from AuthService -->
-      <div class="form-group">
+      <div class="formGroup">
         <input
           type="button"
-          class="btn btn-success"
+          class="btn btnPrimary"
           value="Log in"
-          (click)="authService.SignIn(userName.value, userPassword.value)"
+          (click)="authService.signIn(userName.value, userPassword.value)"
         />
       </div>
 
-      <div class="form-group">
+      <div class="formGroup">
         <span class="or"><span class="orInner">Or</span></span>
       </div>
 
-      <div class="form-group">
+      <!-- Calling GoogleAuth Api from AuthService -->
+      <div class="formGroup">
+        <!-- (click)="authService.GoogleAuth()" -->
+        <button type="button" class="btn googleBtn">
+          <i class="fab fa-google-plus-g"></i>
+          Log in with Google
+        </button>
+      </div>
+
+      <div class="formGroup">
         <button
-          class="btn btn-outline-info"
           type="button"
+          class="btn facebookBtn"
           (click)="authService.FacebookAuth()"
         >
+          <i class="fab fa-facebook-f"></i>
           Log in with Facebook
         </button>
+      </div>
+
+      <div class="forgotPassword">
+        <span routerLink="/forgot-password">Forgot Password?</span>
       </div>
     </div>
 
     <div class="redirectToLogin">
       <span
         >Don't have an account?<span
-          class="redirect btn btn-primary"
+          class="redirect"
           routerLink="/register-user"
         >
           Sign Up</span

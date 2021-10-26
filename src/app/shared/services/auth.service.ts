@@ -19,6 +19,7 @@ import {
 } from '@angular/fire/compat/storage';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+import { EmailValidator } from '@angular/forms';
 
 @Injectable({
   providedIn: 'root',
@@ -35,66 +36,114 @@ export class AuthService {
     public ngZone: NgZone,
     public afs: AngularFirestore // public storageRef: AngularFireStorageReference, // public storageTask: AngularFireUploadTask
   ) {
+    // firebase.firestore().settings({ experimentalAutoDetectLongPolling: true });
     this.afAuth.authState.subscribe((user) => {
       if (user) {
+        // console.log(user);
         this.userData = user;
         localStorage.setItem('user', JSON.stringify(this.userData));
         JSON.parse(localStorage.getItem('user')!);
+        this.router.navigate(['dashboard']);
+        // this.getUserDoc(this.userData!.uid).subscribe((res) => {
+        //   this.userData = res;
 
-        this.getUserDoc(this.userData!.uid).subscribe((res) => {
-          console.log(res);
-          this.userData = res;
-          this.router.navigate(['dashboard']);
-        });
+        // });
       } else {
         localStorage.setItem('user', null!);
         JSON.parse(localStorage.getItem('user')!);
       }
     });
+
+    console.log('Calling from the constructor', this.userData);
   }
 
-  SignIn(email: string, password: string) {
+  signIn(email: string, password: string) {
+    // console.log('click');
     return this.afAuth
       .signInWithEmailAndPassword(email, password)
       .then((result) => {
+        console.log('Verified:', result.user?.emailVerified);
+        var user = result.user;
+        var pass = password;
+        var verifiedEmail = result.user?.emailVerified;
         this.ngZone.run(() => {
-          this.router.navigate(['dashboard']);
+          if (!verifiedEmail) {
+            this.SendVerificationMail();
+          } else {
+            if (
+              result.user?.emailVerified === this.userData.emailVerified &&
+              password === this.userData.password
+            ) {
+              this.router.navigate(['dashboard']);
+            } else {
+              const userRef: AngularFirestoreDocument<any> = this.afs.doc(
+                `user/${user!.uid}`
+              );
+              const userData: User = {
+                uid: user!.uid,
+                email: email,
+                displayName: this.userData!.displayName,
+                photoURL: this.userData!.photoURL,
+                emailVerified: user!.emailVerified,
+                password: pass,
+              };
+
+              userRef.update(userData);
+              this.router.navigate(['dashboard']);
+            }
+          }
         });
-        this.SetUserData(result.user);
       })
       .catch((error) => {
         window.alert(error.message);
       });
   }
 
-  SignUp(email: string, password: string) {
+  signUp(name: string, email: string, password: string) {
     return this.afAuth
       .createUserWithEmailAndPassword(email, password)
       .then((result) => {
-        this.SetUserData(result.user);
+        const userName = name;
+        const pass = password;
+        this.addUserData(result.user, userName, pass);
+
+        this.SendVerificationMail();
       })
       .catch((error) => {
         window.alert(error.message);
       });
+  }
+  SendVerificationMail() {
+    return this.afAuth.currentUser.then((u) =>
+      u?.sendEmailVerification().then((res) => {
+        this.router.navigate(['verify-email-address']);
+      })
+    );
   }
 
   get isLoggedIn(): boolean {
     const user = JSON.parse(localStorage.getItem('user')!);
-    return user !== null && user.emailVerification !== false ? true : false;
+    return user !== null && user.emailVerified !== false ? true : false;
   }
 
   AuthLogin(provider: any) {
     return this.afAuth
       .signInWithPopup(provider)
       .then((result) => {
-        if (this.afs.collection('user').doc(result.user?.uid)) {
-          this.router.navigate(['dashboard']);
-        } else {
-          this.SetUserData(result.user);
-          this.ngZone.run(() => {
+        const user = result.user;
+
+        // console.log(user?.uid);
+        const userRef = this.afs.collection('user').doc(user!.uid);
+        userRef.get().subscribe((res) => {
+          if (res.exists) {
+            console.log('exists');
             this.router.navigate(['dashboard']);
-          });
-        }
+          } else {
+            this.SetUserData(result.user);
+
+            this.router.navigate(['dashboard']);
+          }
+        });
       })
       .catch((error) => {
         window.alert(error);
@@ -110,6 +159,24 @@ export class AuthService {
       email: user.email,
       displayName: user.displayName,
       photoURL: user.photoURL,
+      emailVerified: user.emailVerified ? user.emailVerified : true,
+      password: user.password ? user.password : '',
+    };
+    return userRef.set(userData, {
+      merge: true,
+    });
+  }
+  addUserData(user: any, userName: string, pass: string) {
+    const userRef: AngularFirestoreDocument<any> = this.afs.doc(
+      `user/${user.uid}`
+    );
+    const userData: User = {
+      uid: user.uid,
+      email: user.email,
+      displayName: userName,
+      photoURL: user.photoURL,
+      emailVerified: user.emailVerified,
+      password: pass,
     };
     return userRef.set(userData, {
       merge: true,
@@ -124,16 +191,11 @@ export class AuthService {
   }
 
   FacebookAuth() {
-    return this.AuthLogin(new firebase.auth.FacebookAuthProvider())
-      .then(() => {
-        this.ngZone.run(() => {
-          // console.log(result);
-          this.router.navigate(['dashboard']);
-        });
-      })
-      .catch((error) => {
+    return this.AuthLogin(new firebase.auth.FacebookAuthProvider()).catch(
+      (error) => {
         window.alert(error);
-      });
+      }
+    );
   }
   title = 'cloudstorage';
   selectedFile!: File;
@@ -164,30 +226,32 @@ export class AuthService {
               email: this.userData.email,
               displayName: this.userData.displayName,
               photoURL: this.fb,
+              emailVerified: this.userData.emailVerified,
+              password: this.userData.password,
             };
 
             userRef.update(userData);
-            console.log(this.fb);
-            console.log('Printed' + this.userData.uid);
-            console.log(userId);
 
             // userData.photoURL = this.fb;
           });
         })
       )
-      .subscribe((url) => {
-        if (url) {
-          console.log('added!!!');
-        }
-      });
+      .subscribe((url) => {});
   }
 
   getUserDoc(id: any) {
     return this.afs.collection('user').doc(id).valueChanges();
   }
 
-  openImageUpload() {
-    console.log('clicked!');
+  forgotPassword(passwordResetEmail: string) {
+    return this.afAuth
+      .sendPasswordResetEmail(passwordResetEmail)
+      .then((res) => {
+        window.alert('Password reset email sent, check your inbox');
+      })
+      .catch((error) => {
+        window.alert(error);
+      });
   }
 }
 
