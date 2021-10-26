@@ -20,6 +20,7 @@ import {
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { EmailValidator } from '@angular/forms';
+import { escapeRegExp } from '@angular/compiler/src/util';
 
 @Injectable({
   providedIn: 'root',
@@ -28,6 +29,7 @@ export class AuthService {
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef;
   userData: any;
   newUserData: any;
+  isSignedIn = false;
   constructor(
     public storage: AngularFireStorage,
     public db: AngularFireDatabaseModule,
@@ -39,15 +41,26 @@ export class AuthService {
     // firebase.firestore().settings({ experimentalAutoDetectLongPolling: true });
     this.afAuth.authState.subscribe((user) => {
       if (user) {
-        // console.log(user);
         this.userData = user;
-        localStorage.setItem('user', JSON.stringify(this.userData));
-        JSON.parse(localStorage.getItem('user')!);
-        this.router.navigate(['dashboard']);
+
+        this.getUserDoc(this.userData!.uid).subscribe((res) => {
+          this.userData = res;
+        });
+
+        // localStorage.setItem('user', JSON.stringify(this.userData));
+        // JSON.parse(localStorage.getItem('user')!);
+        // console.log(
+        //   'Local Storage',
+        //   JSON.parse(localStorage.getItem('user')!)
+        // );
+
         // this.getUserDoc(this.userData!.uid).subscribe((res) => {
         //   this.userData = res;
-
         // });
+        // if (this.userData.emailVerified) {
+        //   console.log('UserData.Email Verified: ', this.userData.emailVerified);
+        //   this.router.navigate(['dashboard']);
+        // }
       } else {
         localStorage.setItem('user', null!);
         JSON.parse(localStorage.getItem('user')!);
@@ -62,18 +75,22 @@ export class AuthService {
     return this.afAuth
       .signInWithEmailAndPassword(email, password)
       .then((result) => {
-        console.log('Verified:', result.user?.emailVerified);
         var user = result.user;
         var pass = password;
         var verifiedEmail = result.user?.emailVerified;
         this.ngZone.run(() => {
           if (!verifiedEmail) {
+            window.alert('Check your indox and verify email');
             this.SendVerificationMail();
           } else {
             if (
               result.user?.emailVerified === this.userData.emailVerified &&
               password === this.userData.password
             ) {
+              console.log('Verified:', result.user?.emailVerified);
+              this.isSignedIn = true;
+              localStorage.setItem('user', JSON.stringify(this.userData));
+              JSON.parse(localStorage.getItem('user')!);
               this.router.navigate(['dashboard']);
             } else {
               const userRef: AngularFirestoreDocument<any> = this.afs.doc(
@@ -134,16 +151,23 @@ export class AuthService {
 
         // console.log(user?.uid);
         const userRef = this.afs.collection('user').doc(user!.uid);
-        userRef.get().subscribe((res) => {
-          if (res.exists) {
-            console.log('exists');
-            this.router.navigate(['dashboard']);
-          } else {
-            this.SetUserData(result.user);
+        console.log('Facebook Email Verified: ', user?.emailVerified);
+        const emailVerified = user?.emailVerified;
+        if (emailVerified) {
+          userRef.get().subscribe((res) => {
+            if (res.exists) {
+              console.log('exists');
+              this.router.navigate(['dashboard']);
+            } else {
+              this.SetUserData(result.user);
 
-            this.router.navigate(['dashboard']);
-          }
-        });
+              this.router.navigate(['dashboard']);
+            }
+          });
+        } else {
+          this.SendVerificationMail();
+          window.alert('Check your inbox to verify your email!');
+        }
       })
       .catch((error) => {
         window.alert(error);
